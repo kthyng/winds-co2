@@ -120,7 +120,7 @@ proj = pyproj.Proj(projinputs)
 # loop through times to get files
 winds = []
 # for t, lat, lon in df.itertuples():  # iterates through rows with each row as a tuple
-for i, (date, lat, lon) in enumerate(zip(dates[:20], lats[:20], lons[:20])):
+for i, (date, lat, lon) in enumerate(zip(dates[:10], lats[:10], lons[:10])):
     xp, yp = proj(lon, lat)  # data point, where we want to calculate wind
     if i == 0:
         # keep a date around that only bumps up when the data date changes
@@ -191,4 +191,4 @@ for i, (date, lat, lon) in enumerate(zip(dates[:20], lats[:20], lons[:20])):
 
     # check: new winds entry should look right when overlaid on wind data
     plt.scatter(lon, lat, s=100, c=wv, cmap=cmo.speed, vmin=vwnd.min(), vmax=vwnd.max())
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
