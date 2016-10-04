@@ -2,9 +2,9 @@
 Read in files, interpolate to points we want
 '''
 
-import requests
-import netCDF4 as netCDF
-import pandas as pd
+# import requests
+# import netCDF4 as netCDF
+# import pandas as pd
 # import xarray as xr
 import netCDF4 as netCDF
 from bs4 import BeautifulSoup
@@ -113,14 +113,14 @@ lonmax = -79
 latmin = 17
 latmax = 33
 projinputs = {'proj': 'lcc', 'llcrnrlon': lonmin, 'llcrnrlat': latmin,
-          'urcrnrlon': lonmax, 'urcrnrlat': latmax, 'lat_0': 30,
-          'lon_0': -94, 'resolution': 'i', 'area_thresh': 0.}
+          'urcrnrlon': lonmax, 'urcrnrlat': latmax, 'lat_0': latmin,
+          'lon_0': lonmin, 'resolution': 'i', 'area_thresh': 0.}
 proj = pyproj.Proj(projinputs)
 
 # loop through times to get files
 winds = []
 # for t, lat, lon in df.itertuples():  # iterates through rows with each row as a tuple
-for i, (date, lat, lon) in enumerate(zip(dates[:10], lats[:10], lons[:10])):
+for i, (date, lat, lon) in enumerate(zip(dates[:1], lats[:1], lons[:1])):
     xp, yp = proj(lon, lat)  # data point, where we want to calculate wind
     if i == 0:
         # keep a date around that only bumps up when the data date changes
@@ -128,7 +128,7 @@ for i, (date, lat, lon) in enumerate(zip(dates[:10], lats[:10], lons[:10])):
         it = bisect.bisect_left(wdates, date)  # index in wind times that equals co2 data time
         fname = wfiles[it]  # file to use to get wind out for this co2 measurement
         # download file
-        if not os.path.exists(fname):
+        if not os.path.exists(fname.split('/')[-1]):
             os.system('wget ' + fname)
         # read in file
         ccmp = netCDF.Dataset(fname.split('/')[-1])
@@ -141,6 +141,8 @@ for i, (date, lat, lon) in enumerate(zip(dates[:10], lats[:10], lons[:10])):
         latitude = latitude[ilat]
         Lon, Lat = np.meshgrid(longitude, latitude)
         X, Y = proj(Lon, Lat)  # wind locations
+        dx = X.max() - X.min()
+        dy = Y.max() - Y.min()
         # get array of indices
         iLon, iLat = np.meshgrid(ilon, ilat)
         # average the winds over the day
@@ -149,8 +151,10 @@ for i, (date, lat, lon) in enumerate(zip(dates[:10], lats[:10], lons[:10])):
         vwnd = ccmp['vwnd'][:].mean(axis=0)
         vwnd = vwnd[iLat, iLon]
         # set up interpolators
-        fu = scipy.interpolate.interp2d(X, Y, uwnd, 'cubic')
-        fv = scipy.interpolate.interp2d(X, Y, vwnd, 'cubic')
+        xg = (xp/dx)*X.shape[1]
+        yg = (yp/dy)*Y.shape[0]
+        # fu = scipy.interpolate.interp2d(X, Y, uwnd, 'linear')
+        # fv = scipy.interpolate.interp2d(X, Y, vwnd, 'linear')
         plt.pcolormesh(longitude, latitude, vwnd, cmap=cmo.speed)
 
     else:
@@ -171,7 +175,7 @@ for i, (date, lat, lon) in enumerate(zip(dates[:10], lats[:10], lons[:10])):
             it = bisect.bisect_left(wdates, date)  # index in wind times that equals co2 data time
             fname = wfiles[it]  # file to use to get wind out for this co2 measurement
             # download file
-            if not os.path.exists(fname):
+            if not os.path.exists(fname.split('/')[-1]):
                 os.system('wget ' + fname)
             # read in file
             ccmp = netCDF.Dataset(fname.split('/')[-1])
@@ -180,15 +184,18 @@ for i, (date, lat, lon) in enumerate(zip(dates[:10], lats[:10], lons[:10])):
             uwnd = uwnd[iLat, iLon]
             vwnd = ccmp['vwnd'][:].mean(axis=0)
             vwnd = vwnd[iLat, iLon]
-            # set up interpolators
-            fu = scipy.interpolate.interp2d(X, Y, uwnd, 'cubic')
-            fv = scipy.interpolate.interp2d(X, Y, vwnd, 'cubic')
+            # # set up interpolators
+            # fu = scipy.interpolate.interp2d(X, Y, uwnd, 'linear')
+            # fv = scipy.interpolate.interp2d(X, Y, vwnd, 'linear')
 
     # do interpolation
     wu = fu(xp, yp)
     wv = fv(xp, yp)
+    wu = map_coordinates(uwnd, np.array([[xg, yg]]).T)
+    wv = map_coordinates(vwnd, np.array([[xg, yg]]).T)
     winds.extend(np.sqrt(wu**2 + wv**2))
 
     # check: new winds entry should look right when overlaid on wind data
     plt.scatter(lon, lat, s=100, c=wv, cmap=cmo.speed, vmin=vwnd.min(), vmax=vwnd.max())
+plt.savefig('vwnd.png', bbox_inches='tight')
     # import pdb; pdb.set_trace()
