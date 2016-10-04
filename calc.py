@@ -148,8 +148,8 @@ for i, (date, lat, lon) in enumerate(zip(dates[:2], lats[:2], lons[:2])):
         vwnd = ccmp['vwnd'][:].mean(axis=0)
         vwnd = vwnd[iLat, iLon]
         # set up interpolators
-        fu = scipy.interpolate.interp2d(X, Y, uwnd)
-        fv = scipy.interpolate.interp2d(X, Y, vwnd)
+        fu = scipy.interpolate.interp2d(X, Y, uwnd, 'cubic')
+        fv = scipy.interpolate.interp2d(X, Y, vwnd, 'cubic')
         plt.pcolormesh(longitude, latitude, vwnd, cmap=cmo.speed)
 
     else:
@@ -179,8 +179,8 @@ for i, (date, lat, lon) in enumerate(zip(dates[:2], lats[:2], lons[:2])):
             vwnd = ccmp['vwnd'][:].mean(axis=0)
             vwnd = vwnd[iLat, iLon]
             # set up interpolators
-            fu = scipy.interpolate.interp2d(X, Y, uwnd)
-            fv = scipy.interpolate.interp2d(X, Y, vwnd)
+            fu = scipy.interpolate.interp2d(X, Y, uwnd, 'cubic')
+            fv = scipy.interpolate.interp2d(X, Y, vwnd, 'cubic')
 
     # do interpolation
     wu = fu(xp, yp)
