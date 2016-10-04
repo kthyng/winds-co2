@@ -120,7 +120,7 @@ proj = pyproj.Proj(projinputs)
 # loop through times to get files
 winds = []
 # for t, lat, lon in df.itertuples():  # iterates through rows with each row as a tuple
-for i, (date, lat, lon) in enumerate(zip(dates[:2], lats[:2], lons[:2])):
+for i, (date, lat, lon) in enumerate(zip(dates[:20], lats[:20], lons[:20])):
     xp, yp = proj(lon, lat)  # data point, where we want to calculate wind
     if i == 0:
         # keep a date around that only bumps up when the data date changes
@@ -128,7 +128,8 @@ for i, (date, lat, lon) in enumerate(zip(dates[:2], lats[:2], lons[:2])):
         it = bisect.bisect_left(wdates, date)  # index in wind times that equals co2 data time
         fname = wfiles[it]  # file to use to get wind out for this co2 measurement
         # download file
-        # os.system('wget ' + fname)
+        if not os.path.exists(fname):
+            os.system('wget ' + fname)
         # read in file
         ccmp = netCDF.Dataset(fname.split('/')[-1])
         # Since this is the first file, deal with projecting the lat/lon values
@@ -170,7 +171,8 @@ for i, (date, lat, lon) in enumerate(zip(dates[:2], lats[:2], lons[:2])):
             it = bisect.bisect_left(wdates, date)  # index in wind times that equals co2 data time
             fname = wfiles[it]  # file to use to get wind out for this co2 measurement
             # download file
-            os.system('wget ' + fname)
+            if not os.path.exists(fname):
+                os.system('wget ' + fname)
             # read in file
             ccmp = netCDF.Dataset(fname.split('/')[-1])
             # average the winds over the day
