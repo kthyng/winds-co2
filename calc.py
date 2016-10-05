@@ -127,7 +127,7 @@ for i, (date, lat, lon) in enumerate(zip(dates, lats, lons)):
         datesave = date
         it = bisect.bisect_left(wdates, date)  # index in wind times that equals co2 data time
         fname = wfiles[it]  # file to use to get wind out for this co2 measurement
-        print('\n' + fname + '\n')
+        print('\n' + str(i) + ': ' + fname.split('/')[-1] + '\n')
         # download file
         if not os.path.exists(fname.split('/')[-1]):
             os.system('wget ' + fname)
@@ -171,7 +171,7 @@ for i, (date, lat, lon) in enumerate(zip(dates, lats, lons)):
             # read in and use new file
             it = bisect.bisect_left(wdates, date)  # index in wind times that equals co2 data time
             fname = wfiles[it]  # file to use to get wind out for this co2 measurement
-            print('\n' + fname + '\n')
+            print('\n' + str(i) + ': ' + fname.split('/')[-1] + '\n')
             # download file
             if not os.path.exists(fname.split('/')[-1]):
                 os.system('wget ' + fname)
@@ -190,6 +190,7 @@ for i, (date, lat, lon) in enumerate(zip(dates, lats, lons)):
     wu = map_coordinates(uwnd, np.array([[yg, xg]]).T)
     wv = map_coordinates(vwnd, np.array([[yg, xg]]).T)
     winds.extend(np.sqrt(wu**2 + wv**2))
+    # np.savez('winds.npz', winds=winds)
     # print( xg, yg, wu, wv, winds[i])
 
     # check: new winds entry should look right when overlaid on wind data
