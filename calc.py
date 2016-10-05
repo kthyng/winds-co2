@@ -120,13 +120,14 @@ proj = pyproj.Proj(projinputs)
 # loop through times to get files
 winds = []
 # for t, lat, lon in df.itertuples():  # iterates through rows with each row as a tuple
-for i, (date, lat, lon) in enumerate(zip(dates[:1], lats[:1], lons[:1])):
+for i, (date, lat, lon) in enumerate(zip(dates, lats, lons)):
     xp, yp = proj(lon, lat)  # data point, where we want to calculate wind
     if i == 0:
         # keep a date around that only bumps up when the data date changes
         datesave = date
         it = bisect.bisect_left(wdates, date)  # index in wind times that equals co2 data time
         fname = wfiles[it]  # file to use to get wind out for this co2 measurement
+        print('\n' + fname + '\n')
         # download file
         if not os.path.exists(fname.split('/')[-1]):
             os.system('wget ' + fname)
@@ -150,12 +151,8 @@ for i, (date, lat, lon) in enumerate(zip(dates[:1], lats[:1], lons[:1])):
         uwnd = uwnd[iLat, iLon]
         vwnd = ccmp['vwnd'][:].mean(axis=0)
         vwnd = vwnd[iLat, iLon]
-        # set up interpolators
-        xg = (xp/dx)*X.shape[1]
-        yg = (yp/dy)*Y.shape[0]
-        # fu = scipy.interpolate.interp2d(X, Y, uwnd, 'linear')
-        # fv = scipy.interpolate.interp2d(X, Y, vwnd, 'linear')
-        plt.pcolormesh(longitude, latitude, vwnd, cmap=cmo.speed)
+        # plt.pcolormesh(longitude, latitude, uwnd, cmap=cmo.speed); plt.colorbar()
+        # plt.pcolormesh(longitude, latitude, vwnd, cmap=cmo.speed); plt.colorbar()
 
     else:
         # compare with datesave to see if a new file is needed
@@ -163,17 +160,18 @@ for i, (date, lat, lon) in enumerate(zip(dates[:1], lats[:1], lons[:1])):
             # use file from before
             pass
         else:
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
 
             # close old file
             ccmp.close()
             # delete old file
-            os.system('rm ' + fname)
+            os.system('rm ' + fname.split('/')[-1])
             # update datesave
             datesave = date
             # read in and use new file
             it = bisect.bisect_left(wdates, date)  # index in wind times that equals co2 data time
             fname = wfiles[it]  # file to use to get wind out for this co2 measurement
+            print('\n' + fname + '\n')
             # download file
             if not os.path.exists(fname.split('/')[-1]):
                 os.system('wget ' + fname)
@@ -184,18 +182,21 @@ for i, (date, lat, lon) in enumerate(zip(dates[:1], lats[:1], lons[:1])):
             uwnd = uwnd[iLat, iLon]
             vwnd = ccmp['vwnd'][:].mean(axis=0)
             vwnd = vwnd[iLat, iLon]
-            # # set up interpolators
-            # fu = scipy.interpolate.interp2d(X, Y, uwnd, 'linear')
-            # fv = scipy.interpolate.interp2d(X, Y, vwnd, 'linear')
 
     # do interpolation
-    wu = fu(xp, yp)
-    wv = fv(xp, yp)
-    wu = map_coordinates(uwnd, np.array([[xg, yg]]).T)
-    wv = map_coordinates(vwnd, np.array([[xg, yg]]).T)
+    # xp/yp locations in grid space for map_coordinates function
+    xg = (xp/dx)*X.shape[1]
+    yg = (yp/dy)*Y.shape[0]
+    wu = map_coordinates(uwnd, np.array([[yg, xg]]).T)
+    wv = map_coordinates(vwnd, np.array([[yg, xg]]).T)
     winds.extend(np.sqrt(wu**2 + wv**2))
+    # print( xg, yg, wu, wv, winds[i])
 
     # check: new winds entry should look right when overlaid on wind data
-    plt.scatter(lon, lat, s=100, c=wv, cmap=cmo.speed, vmin=vwnd.min(), vmax=vwnd.max())
-plt.savefig('vwnd.png', bbox_inches='tight')
+    # plt.scatter(lon, lat, s=100, c=wu, cmap=cmo.speed, vmin=uwnd.min(), vmax=uwnd.max())
+    # plt.scatter(lon, lat, s=100, c=wv, cmap=cmo.speed, vmin=vwnd.min(), vmax=vwnd.max(),
+    #             edgecolors=None)
+# plt.savefig('uwnd.png', bbox_inches='tight')
+# plt.savefig('vwnd.png', bbox_inches='tight')
     # import pdb; pdb.set_trace()
+np.savez('winds.npz', winds=winds)
