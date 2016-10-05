@@ -172,6 +172,7 @@ for i, (date, lat, lon) in enumerate(zip(dates, lats, lons)):
             it = bisect.bisect_left(wdates, date)  # index in wind times that equals co2 data time
             fname = wfiles[it]  # file to use to get wind out for this co2 measurement
             print('\n' + str(i) + ': ' + fname.split('/')[-1] + '\n')
+            np.savetxt('winds.txt', winds)
             # download file
             if not os.path.exists(fname.split('/')[-1]):
                 os.system('wget ' + fname)
@@ -200,4 +201,4 @@ for i, (date, lat, lon) in enumerate(zip(dates, lats, lons)):
 # plt.savefig('uwnd.png', bbox_inches='tight')
 # plt.savefig('vwnd.png', bbox_inches='tight')
     # import pdb; pdb.set_trace()
-np.savez('winds.npz', winds=winds)
+# np.savez('winds.npz', winds=winds)
