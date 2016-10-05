@@ -201,4 +201,4 @@ for i, (date, lat, lon) in enumerate(zip(dates, lats, lons)):
 # plt.savefig('uwnd.png', bbox_inches='tight')
 # plt.savefig('vwnd.png', bbox_inches='tight')
     # import pdb; pdb.set_trace()
-# np.savez('winds.npz', winds=winds)
+np.savez('winds.npz', winds=winds)
